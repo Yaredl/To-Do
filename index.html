@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Productive Planner Pro — Todo</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app" role="application" aria-labelledby="appTitle">
+    <header>
+      <h1 id="appTitle">Productive Planner Pro</h1>
+      <div class="top-controls">
+        <div class="search" title="Search tasks">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.35-4.35" stroke="#023231" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="11" r="6" stroke="#023231" stroke-width="2"/></svg>
+          <input id="searchInput" placeholder="Search here..." aria-label="Search tasks">
+        </div>
+      </div>
+    </header>
+
+    <div class="add-row" aria-live="polite">
+      <div class="task-input">
+        <input style="background-color: rgba(0, 255, 255, 0.281);"  id="newTaskInput" type="text" placeholder="Add New Todo item here..." aria-label="New task description">
+      </div>
+      <div style="width:220px; display:flex; gap:8px;">
+        <input style=" color:rgba(255, 255, 255, 0.774); background-color: rgba(0, 255, 255, 0.281);" id="newDeadline" type="datetime-local" title="Set deadline (optional)" />
+        <button id="addBtn" class="btn primary" style="color: white;">Add</button>
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <div>
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input id="selectAllChk" type="checkbox" /> <strong style="margin-left:6px">Select all</strong>
+        </label>
+      </div>
+      <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div id="tasksRemaining">0 tasks remaining</div>
+        <div class="filters" role="tablist" aria-label="Filters">
+          <button class="btn small active" data-filter="all">All</button>
+          <button class="btn small" data-filter="active">Active</button>
+          <button class="btn small" data-filter="completed">Completed</button>
+          <button class="btn small" data-filter="overdue">Overdue</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tasks-container" id="tasksList" aria-live="polite">
+      <!-- tasks rendered here -->
+    </div>
+
+    <footer>
+      <p>
+    <span class="gray">© UNTITLED. ALL RIGHTS RESERVED. 2025</span> 
+ 
+    <h3 style="color: white;">Authors</h3>
+			Fekadu Abay | 
+			Biruk Mesfin |
+			Daniel Dereje |
+			Yared Mamo
+  </p>
+    </footer>
+  </div>
+ 
+  <div id="popup-container" aria-hidden="true"></div>
+
+
+  <!-- JS -->
+  <script src="app.js"></script>
+</body>
+</html>
