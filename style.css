@@ -1,0 +1,79 @@
+    :root{
+      --bg:#1d225c;
+      --panel:#1414aa;
+      --accent:rgba(0, 255, 255, 0.281); /* teal-ish */
+      --muted:#817ed3;
+      --card:#0d0e1a;
+      --glass: rgba(255,255,255,0.04);
+      --danger:#ca1d31;
+      --success:#0b5c2c;
+      --ui-height:40px; /* compact control height */
+      --ui-padding:10px;
+      --radius:8px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,#0b0b13 0%, #0b0b1a 100%);
+      color:#e6e6f3;
+      padding:24px;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      align-items:center;
+    }
+
+    /* App container (card) */
+    #app{
+      width:100%;
+      max-width:1100px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.12));
+      border-radius:8px;
+      padding:18px;
+      border:1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.6), 0 0 22px rgba(47,179,176,0.03) inset;
+    }
+
+    header{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+      row-gap:10px;
+    }
+    h1{
+      font-size:32px;
+      margin:0;
+      color:#dfe6ff;
+      letter-spacing:0.5px;
+    }
+
+    .top-controls{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .search {
+      display:flex;
+      align-items:center;
+      background:rgba(247, 244, 230, 0.966);
+      padding:8px 12px;
+      border-radius:10px;
+      min-width:200px;
+      color:#053234;
+      height:var(--ui-height);
+    }
+    .search input{
+      border:0;
+      background:transparent;
+      color:inherit;
+      outline:none;
+      font-size:15px;
+      min-width:160px;
+    }
