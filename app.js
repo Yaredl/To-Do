@@ -460,3 +460,101 @@
     draggedTaskEl = null;
   }
 
+ // ---------- keyboard accessibility handlers (RETAINED) ----------
+
+  // Helper to find the next/prev visible task element
+  function getNextTaskEl(currentEl, direction) {
+    const visibleTasks = Array.from(tasksList.querySelectorAll('.task[tabindex="0"]'));
+    if (!currentEl) return visibleTasks[0];
+    const currentIndex = visibleTasks.indexOf(currentEl);
+    const nextIndex = currentIndex + direction;
+    return visibleTasks[nextIndex];
+  }
+
+  document.addEventListener('keydown', (e) => {
+    // Keyboard Shortcut: Ctrl+A or Cmd+A (Add New Task)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+      e.preventDefault();
+      newTaskInput.focus();
+      return;
+    }
+
+    // Task Navigation (only if focus is within the task list or on a task)
+    const focusedEl = document.activeElement;
+    const isTaskFocused = focusedEl && focusedEl.classList.contains('task');
+    const isInputFocused = focusedEl && (focusedEl.tagName === 'INPUT' || focusedEl.tagName === 'TEXTAREA' || focusedEl.tagName === 'SELECT');
+
+    if (isTaskFocused) {
+      let nextEl = null;
+
+      // Arrow Down: Focus next task
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        nextEl = getNextTaskEl(focusedEl, 1);
+      }
+      // Arrow Up: Focus previous task
+      else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        nextEl = getNextTaskEl(focusedEl, -1);
+      }
+      // Spacebar: Toggle task completion
+      else if (e.key === ' ') {
+        e.preventDefault();
+        const taskId = parseInt(focusedEl.dataset.id);
+        const task = tasks.find(t => t.id === taskId);
+        if (task) {
+          task.completed = !task.completed;
+          saveTasks();
+          renderTasks();
+          // Re-focus the task element after re-render (since the element is recreated)
+          setTimeout(() => {
+            const newEl = tasksList.querySelector(`[data-id="${taskId}"]`);
+            if(newEl) newEl.focus();
+          }, 0);
+        }
+      }
+
+      if (nextEl) nextEl.focus();
+    } else if (e.key === 'ArrowDown' && !isInputFocused) {
+      // If no task is focused but ArrowDown pressed, focus the first task
+      e.preventDefault();
+      const firstTask = getNextTaskEl(null, 0);
+      if (firstTask) firstTask.focus();
+    }
+  });
+
+  // ---------- select all visible / deadline checking remain the same ----------
+  function toggleSelectAll() {
+    const visible = applyFilters(tasks);
+    if (visible.length === 0) return;
+    const setTo = !visible.every(t => t.completed);
+    visible.forEach(t => t.completed = setTo);
+    saveTasks();
+    renderTasks();
+    showPopup(`Marked ${setTo ? 'completed' : 'active'} for visible tasks`, 'warn');
+  }
+
+  function checkDeadlines() {
+    const now = new Date();
+    tasks.forEach(task => {
+      if (!task.deadline || task.completed) return;
+
+      const deadline = new Date(task.deadline);
+      const diffMs = deadline - now;
+      const diffMins = diffMs / 60000;
+
+      // If overdue and not yet notifiedOverdue
+      if (diffMs <= 0 && !task.notifiedOverdue) {
+        task.notifiedOverdue = true;
+        showPopup(`Task "${task.description}" is overdue!`, 'danger', 6000);
+        notifyBrowser('Task overdue', `Task "${task.description}" has passed its deadline.`);
+      } else if (diffMins > 0 && diffMins <= 15 && !task.notifiedSoon) {
+        // upcoming within 15 minutes
+        task.notifiedSoon = true;
+        showPopup(`Reminder: "${task.description}" due within ${Math.ceil(diffMins)} min`, 'warn', 5000);
+        notifyBrowser('Task reminder', `Your task "${task.description}" is due soon.`);
+      }
+    });
+    saveTasks();
+    renderTasks(); // will add overdue class where needed
+    }
