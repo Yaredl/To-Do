@@ -136,4 +136,117 @@
       color:white;
       border:none;
     }
+/* override inline width on the right group so layout is flexible on desktop */
+    .add-row > div[style] {
+      width: auto !important;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex: 0 0 auto;
+    }
+
+    .meta-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+    .filters{
+      display:flex;
+      gap:8px;
+    }
+    .filters .btn{
+      padding:6px 10px;
+      font-size:13px;
+      height:34px;
+    }
+    .filters .btn.active{
+      background:var(--card);
+      border:1px solid rgba(255,255,255,0.06);
+      color:#e6e6f3;
+    }
+
+    .tasks-container{
+      border-top:1px solid rgba(255,255,255,0.04);
+      padding-top:12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-height:120px;
+      max-height:60vh;
+      overflow:auto;
+    }
+
+    .task{
+      display:flex;
+      gap:12px;
+      padding:12px;
+      align-items:flex-start;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      border-radius:6px;
+      border:1px solid rgba(255,255,255,0.02);
+    }
+    .task.overdue{
+      border-left:4px solid var(--danger);
+      background: linear-gradient(90deg, rgba(224,90,106,0.04), transparent);
+    }
+    .task .left{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      flex:1;
+      min-width:0;
+    }
+    .task .desc{
+      font-size:16px;
+      color:#e6e6f3;
+      margin:0 0 6px 0;
+      word-break:break-word;
+    }
+    .task .desc.completed{
+      text-decoration:line-through;
+      opacity:0.6;
+    }
+    .task small{
+      color:var(--muted);
+    }
+    .task .right{
+      margin-left:auto;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-shrink:0;
+    }
+
+    .task .subtasks{
+      margin-top:8px;
+      padding-left:34px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .subtask{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      font-size:14px;
+      color:var(--muted);
+      background:transparent;
+    }
+
+    .edit-controls{
+      display:flex;
+      gap:8px;
+      margin-top:6px;
+    }
+    .small{
+      padding:6px 8px;
+      border-radius:6px;
+      font-size:13px;
+      height:34px;
+    }
+
+
 
