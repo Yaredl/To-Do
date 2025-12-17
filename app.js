@@ -409,4 +409,54 @@
     showPopup('Task added', 'success');
     newTaskInput.focus();
   }
+  // ---------- drag and drop handlers (RETAINED) ----------
+  function handleDragStart(e) {
+    draggedTaskEl = this;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', this.dataset.id);
+    setTimeout(() => this.style.opacity = '0.4', 0);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault(); // crucial to allow drop
+    e.dataTransfer.dropEffect = 'move';
+    if (this !== draggedTaskEl) {
+      this.classList.add('drag-over');
+    }
+  }
+
+  function handleDragLeave() {
+    this.classList.remove('drag-over');
+  }
+
+  function handleDrop(e) {
+    e.stopPropagation();
+    this.classList.remove('drag-over');
+
+    if (draggedTaskEl !== this) {
+      const fromId = parseInt(draggedTaskEl.dataset.id);
+      const toId = parseInt(this.dataset.id);
+
+      // Get the task to move
+      const taskToMove = tasks.find(t => t.id === fromId);
+
+      // 1. Remove the task to move
+      tasks = tasks.filter(t => t.id !== fromId);
+      // 2. Find the task we are dropping onto
+      const targetTask = tasks.find(t => t.id === toId);
+      const targetIndex = tasks.indexOf(targetTask);
+      // 3. Insert it at the target index
+      tasks.splice(targetIndex, 0, taskToMove);
+
+      saveTasks();
+      showPopup('Task reordered', 'success');
+      renderTasks();
+    }
+  }
+
+  function handleDragEnd() {
+    this.style.opacity = '1';
+    document.querySelectorAll('.task').forEach(t => t.classList.remove('drag-over'));
+    draggedTaskEl = null;
+  }
 
