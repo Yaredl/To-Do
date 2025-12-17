@@ -65,3 +65,237 @@
       return false;
     }
   }
+ // ---------- initial fetch if no local data ----------
+  async function fetchInitialTasks() {
+    try {
+      const res = await fetch('https://jsonplaceholder.typicode.com/todos?_limit=12');
+      if (!res.ok) throw new Error('fetch failed');
+      const data = await res.json();
+      tasks = data.map(d => ({
+        id: d.id,
+        description: d.title,
+        completed: !!d.completed,
+        source: 'api',
+        deadline: null,
+        subtasks: [],
+        notifiedSoon:false,
+        notifiedOverdue:false
+      }));
+      nextId = tasks.reduce((m, t) => Math.max(m, t.id), 0) + 1;
+      saveTasks();
+      showPopup('Loaded sample tasks', 'warn');
+    } catch (e) {
+      console.error(e);
+      showPopup('Unable to load sample tasks', 'danger');
+    }
+  }
+
+  // ---------- rendering ----------
+  function formatDeadline(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.toLocaleString();
+  }
+
+  function countRemaining() {
+    return tasks.filter(t => !t.completed).length;
+  }
+
+  function applyFilters(list) {
+    // Filter by creation order (unshifted tasks)
+    let out = list; 
+    
+    // filter by currentFilter
+    if (currentFilter === 'active') out = out.filter(t => !t.completed);
+    else if (currentFilter === 'completed') out = out.filter(t => t.completed);
+    else if (currentFilter === 'overdue') {
+      out = out.filter(t => !t.completed && t.deadline && new Date(t.deadline) < new Date());
+    }
+
+    // apply search
+    if (currentSearch.trim()) {
+      const q = currentSearch.toLowerCase();
+      out = out.filter(t => t.description.toLowerCase().includes(q) || (t.subtasks && t.subtasks.some(s=> s.text.toLowerCase().includes(q))));
+    }
+    return out;
+  }
+
+  function renderTasks() {
+    tasksList.innerHTML = '';
+    // update remaining
+    tasksRemaining.textContent = `${countRemaining()} tasks remaining`;
+
+    const visible = applyFilters(tasks);
+
+    if (visible.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.padding = '18px';
+      empty.style.color = 'var(--muted)';
+      empty.textContent = 'No todos found';
+      tasksList.appendChild(empty);
+      return;
+    }
+
+    visible.forEach(task => {
+      // Determine if the task is overdue but not completed
+      const isOverdue = task.deadline && !task.completed && new Date(task.deadline) < new Date();
+      // Determine if we should disable adding subtasks
+      const disableSubtaskAdd = task.completed || isOverdue;
+
+      const taskEl = document.createElement('div');
+      taskEl.className = 'task' + (isOverdue ? ' overdue' : '');
+      taskEl.dataset.id = task.id;
+      taskEl.setAttribute('tabindex', '0'); // For keyboard navigation
+      taskEl.setAttribute('draggable', 'true'); // For Drag-and-Drop
+
+      // Drag-and-Drop Listeners
+      taskEl.addEventListener('dragstart', handleDragStart);
+      taskEl.addEventListener('dragover', handleDragOver);
+      taskEl.addEventListener('drop', handleDrop);
+      taskEl.addEventListener('dragleave', handleDragLeave);
+      taskEl.addEventListener('dragend', handleDragEnd);
+
+      // left area
+      const left = document.createElement('div');
+      left.className = 'left';
+
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.checked = !!task.completed;
+      chk.addEventListener('change', () => {
+        task.completed = chk.checked;
+        // when completed, mark subtasks as completed too (optional)
+        // save and render
+        saveTasks();
+        showPopup(`Task "${task.description}" marked ${task.completed ? 'completed' : 'active'}`, 'warn');
+        renderTasks();
+      });
+
+      const content = document.createElement('div');
+      content.style.minWidth = '220px';
+
+      // description (or edit mode)
+      const desc = document.createElement('p');
+      desc.className = 'desc' + (task.completed ? ' completed' : '');
+      desc.textContent = task.description;
+      content.appendChild(desc);
+
+      // deadline
+      if (task.deadline) {
+        const d = document.createElement('small');
+        d.textContent = `Due: ${formatDeadline(task.deadline)}`;
+        content.appendChild(d);
+      }
+
+      // subtasks block
+      const subtWrap = document.createElement('div');
+      subtWrap.className = 'subtasks';
+      if (task.subtasks && task.subtasks.length) {
+        task.subtasks.forEach(st => {
+          const s = document.createElement('label');
+          s.className = 'subtask';
+          const sch = document.createElement('input');
+          sch.type = 'checkbox';
+          sch.checked = !!st.completed;
+          sch.addEventListener('change', () => {
+            st.completed = sch.checked;
+            saveTasks();
+            renderTasks();
+          });
+          const span = document.createElement('span');
+          span.textContent = st.text;
+          if (st.completed) span.style.textDecoration = 'line-through';
+          s.appendChild(sch);
+          s.appendChild(span);
+
+          const subDel = document.createElement('button');
+          subDel.className = 'btn small';
+          subDel.textContent = 'Del';
+          subDel.addEventListener('click', (e) => {
+            e.stopPropagation();
+            task.subtasks = task.subtasks.filter(x => x.id !== st.id);
+            saveTasks();
+            showPopup('Subtask deleted', 'danger');
+            renderTasks();
+          });
+          s.appendChild(subDel);
+
+          subtWrap.appendChild(s);
+        });
+      }
+
+      content.appendChild(subtWrap);
+
+      // Check if we should render the "Add subtask" input/button
+      if (!disableSubtaskAdd) {
+        // Add subtask control
+        const addSubRow = document.createElement('div');
+        addSubRow.style.display = 'flex';
+        addSubRow.style.gap = '6px';
+        addSubRow.style.marginTop = '6px';
+
+        const subInput = document.createElement('input');
+        subInput.type = 'text';
+        subInput.placeholder = 'Add subtask...';
+        subInput.style.flex = '1';
+        subInput.className = 'small';
+
+        const subAddBtn = document.createElement('button');
+        subAddBtn.className = 'btn small';
+        subAddBtn.textContent = 'Add';
+        subAddBtn.addEventListener('click', () => {
+          const txt = subInput.value.trim();
+          if (!txt) { alert('Please write something'); return; }
+          const sid = Date.now() + Math.floor(Math.random()*1000);
+          if (!task.subtasks) task.subtasks = [];
+          task.subtasks.push({ id: sid, text: txt, completed:false });
+          subInput.value = '';
+          saveTasks();
+          showPopup('Subtask added', 'success');
+          renderTasks();
+        });
+
+        addSubRow.appendChild(subInput);
+        addSubRow.appendChild(subAddBtn);
+
+        content.appendChild(addSubRow);
+      }
+
+      left.appendChild(chk);
+      left.appendChild(content);
+
+      // right controls (edit, deadline edit, delete)
+      const right = document.createElement('div');
+      right.className = 'right';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn small';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', () => startEdit(task, taskEl));
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn small danger';
+      delBtn.textContent = 'Delete';
+      delBtn.addEventListener('click', () => {
+        if (!confirm('Delete this task?')) return;
+        tasks = tasks.filter(t => t.id !== task.id);
+        saveTasks();
+        showPopup('Task deleted', 'danger');
+        renderTasks();
+      });
+
+      right.appendChild(editBtn);
+      right.appendChild(delBtn);
+
+      taskEl.appendChild(left);
+      taskEl.appendChild(right);
+
+      tasksList.appendChild(taskEl);
+    });
+
+    // update selectAll state
+    const visibleIds = visible.map(t => t.id);
+    const allChecked = visible.length > 0 && visible.every(t => t.completed);
+    selectAllChk.checked = allChecked;
+  }
