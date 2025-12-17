@@ -299,3 +299,114 @@
     const allChecked = visible.length > 0 && visible.every(t => t.completed);
     selectAllChk.checked = allChecked;
   }
+
+ // ---------- editing ----------
+  function startEdit(task, taskEl) {
+    // replace the content area with inputs and Save/Cancel visible
+    const left = taskEl.querySelector('.left');
+    left.innerHTML = ''; // clear
+    const chk = document.createElement('input'); chk.type = 'checkbox'; chk.checked = task.completed;
+    chk.addEventListener('change', ()=> task.completed = chk.checked);
+
+    const content = document.createElement('div');
+    content.style.flex = '1';
+    const descInput = document.createElement('input');
+    descInput.type = 'text';
+    descInput.value = task.description;
+    descInput.style.fontSize = '16px';
+    descInput.style.padding = '10px';
+    descInput.style.width = '100%';
+
+    const deadlineInput = document.createElement('input');
+    deadlineInput.type = 'datetime-local';
+    deadlineInput.value = task.deadline ? new Date(task.deadline).toISOString().slice(0,16) : '';
+
+    content.appendChild(descInput);
+    content.appendChild(document.createElement('br'));
+    content.appendChild(deadlineInput);
+
+    const ctl = document.createElement('div');
+    ctl.className = 'edit-controls';
+
+    const save = document.createElement('button');
+    save.className = 'btn primary small';
+    save.textContent = 'Save';
+    save.addEventListener('click', () => {
+      const newDesc = descInput.value.trim();
+      if (!newDesc) { alert('Please write something'); return; }
+      
+      const potentialDeadlineValue = deadlineInput.value;
+      if (potentialDeadlineValue) {
+        const potentialDeadline = new Date(potentialDeadlineValue);
+        // Check if the new deadline is in the past
+        if (potentialDeadline < new Date()) {
+          alert("Cannot set a deadline in the past. Please choose a future date and time.");
+          return; 
+        }
+        task.deadline = potentialDeadline.toISOString();
+      } else {
+        task.deadline = null;
+      }
+      
+      task.description = newDesc;
+      task.completed = chk.checked;
+      // reset notified flags so new deadlines can be re-notified
+      task.notifiedSoon = false;
+      task.notifiedOverdue = false;
+      saveTasks();
+      showPopup('Task updated', 'success');
+      renderTasks();
+    });
+
+    const cancel = document.createElement('button');
+    cancel.className = 'btn small';
+    cancel.textContent = 'Cancel';
+    cancel.addEventListener('click', () => renderTasks());
+
+    ctl.appendChild(save);
+    ctl.appendChild(cancel);
+
+    left.appendChild(chk);
+    left.appendChild(content);
+    left.appendChild(ctl);
+  }
+
+  // ---------- add task ----------
+  function addTask() {
+    const txt = newTaskInput.value.trim();
+    if (!txt) { alert('Please write something'); return; }
+    
+    const dValue = newDeadline.value;
+    let d = null;
+
+    if (dValue) {
+      const potentialDeadline = new Date(dValue);
+      // DEADLINE CHECK 
+      if (potentialDeadline < new Date()) {
+        alert("The deadline you entered is already passed. Please enter a future date and time.");
+        newDeadline.focus();
+        return; // STOP task creation
+      }
+      d = potentialDeadline.toISOString();
+    }
+
+    const id = nextId++;
+    const t = {
+      id,
+      description: txt,
+      completed: false,
+      source: 'user',
+      deadline: d,
+      subtasks: [],
+      notifiedSoon:false,
+      notifiedOverdue:false
+    };
+    tasks.unshift(t); // newest first
+    newTaskInput.value = '';
+    newDeadline.value = '';
+    saveTasks();
+    renderTasks();
+    showPopup('Task added', 'success');
+    newTaskInput.focus();
+  }
+
