@@ -558,3 +558,51 @@
     saveTasks();
     renderTasks(); // will add overdue class where needed
     }
+// ---------- listeners ----------
+  addBtn.addEventListener('click', addTask);
+  newTaskInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addTask();
+  });
+
+  filterButtons.forEach(btn => btn.addEventListener('click', (e) => {
+    filterButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderTasks();
+  }));
+
+  searchInput.addEventListener('input', (e) => {
+    currentSearch = e.target.value;
+    renderTasks();
+  });
+
+  selectAllChk.addEventListener('change', toggleSelectAll);
+
+  // ---------- start / init ----------
+  async function startApp() {
+    // request Notification permission
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      try { Notification.requestPermission(); } catch (e) {}
+    }
+
+    const loaded = loadTasksFromStorage();
+
+    if (!loaded) await fetchInitialTasks();
+
+    renderTasks();
+
+    // periodic check
+    checkIntervalId = setInterval(checkDeadlines, 60000); // every minute
+    // run once immediately
+    checkDeadlines();
+  }
+
+  // expose to window for debugging (optional)
+  window._todoApp = {
+    get tasks() { return tasks; },
+    save() { saveTasks(); },
+    render() { renderTasks(); }
+  };
+
+  startApp();
+})();
