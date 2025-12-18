@@ -294,5 +294,39 @@
       background:transparent;
     }
 
+    /*
+      Responsive rules (rewritten for clarity)
+      - On narrow screens, stack header controls and compact spacing
+      - Keep inputs and buttons usable (touch targets) but visually compact
+    */
+    @media (max-width:900px) {
+      #app{ padding:14px; }
+      header{ align-items:flex-start; }
+      h1{ font-size:24px; }
+      .top-controls{ width:100%; justify-content:flex-end; }
+      .search{ min-width:140px; height:36px; padding:6px 10px; }
+      .search input{ min-width:90px; font-size:14px; }
+      .add-row{ flex-direction:column; align-items:stretch; gap:8px; justify-content:flex-start; }
+      .add-row > div[style] { width:100%; display:flex; gap:8px; }
+      .task-input{ width:100%; flex: 1 1 auto; min-width:0; }
+      input[type="text"], input[type="datetime-local"], .btn{
+        height:40px;
+        font-size:14px;
+      }
+      .meta-row{ flex-direction:column; align-items:flex-start; gap:8px; }
+      .filters{ width:100%; justify-content:flex-start; flex-wrap:wrap; }
+      .tasks-container{ max-height:50vh; }
+      .task{ flex-direction:column; align-items:stretch; }
+      .task .right{ margin-left:0; margin-top:8px; justify-content:flex-end; }
+      .task .left{ align-items:flex-start; }
+    }
+
+    @media (max-width:480px) {
+      body{ padding:14px; }
+      :root { --ui-height:36px; --ui-padding:8px; }
+      h1{ font-size:20px; }
+      .popup{ padding:8px 10px; font-size:14px; }
+      .filters .btn{ padding:6px 8px; font-size:13px; }
+    }
 
 
